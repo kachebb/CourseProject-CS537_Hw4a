@@ -14,7 +14,7 @@ static pthread_cond_t   empty = PTHREAD_COND_INITIALIZER;
 
 int bufferSize;
 int *connFdBuf;//connection descriptor buffer
-int fillptr = 0;
+//int fillptr = 0;
 int useptr = 0;
 int consumers = 1;
 static int numInBuf = 0;
@@ -22,8 +22,8 @@ char *sched;
 
 
 void do_fill(int value){
-  connFdBuf[fillptr] = value;
-  fillptr = (fillptr + 1)%bufferSize;
+  connFdBuf[numInBuf] = value;
+  //fillptr = (fillptr + 1)%bufferSize;
   numInBuf ++;
 }
 
@@ -31,8 +31,12 @@ int do_get(){
   printf("current sched: %s\n", sched);
   if(!strcmp(sched, "FIFO")){
     printf("in fifo");
-    int tmp = connFdBuf[useptr];
-    useptr = (useptr+1)%bufferSize;
+    int tmp = connFdBuf[0];
+    int i;
+    //get one data out, move the rest forward
+    for(i=0; i< numInBuf-1; i++){
+      connFdBuf[i] = connFdBuf[i+1];
+    }
     numInBuf --;
     return tmp;
   }
@@ -89,8 +93,8 @@ int main(int argc, char *argv[])
     //initialize global variables 
     connFdBuf = (int*)malloc(buffers*sizeof(int));
     bufferSize = buffers;
-    useptr = 0;
-    fillptr = 0;
+    //useptr = 0;
+    // fillptr = 0;
     numInBuf = 0;
     consumers = threads;
 
