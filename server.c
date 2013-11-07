@@ -3,7 +3,7 @@
 #include <stdlib.h>
 #include <pthread.h>
 #include <stdio.h>
-
+#include<string.h>
 
 //global variables: 
 
@@ -18,6 +18,7 @@ int fillptr = 0;
 int useptr = 0;
 int consumers = 1;
 static int numInBuf = 0;
+char *sched;
 
 
 void do_fill(int value){
@@ -27,25 +28,37 @@ void do_fill(int value){
 }
 
 int do_get(){
-  int tmp = connFdBuf[useptr];
-  useptr = (useptr+1)%bufferSize;
-  numInBuf --;
-  return tmp;
+  printf("current sched: %s\n", sched);
+  if(!strcmp(sched, "FIFO")){
+    printf("in fifo");
+    int tmp = connFdBuf[useptr];
+    useptr = (useptr+1)%bufferSize;
+    numInBuf --;
+    return tmp;
+  }
+  else if (!strcmp(sched, "SFNF")){
+    printf("SFNF\n");
+  }
+  else if (!strcmp(sched, "SFF")){
+    printf("SFF\n");
+  }
+  else return -1;
 }
 
 // Parse the new arguments
-void getargs(int *port, int *threads, int *buffers, char*schedalg, int argc, char *argv[])
+void getargs(int *port, int *threads, int *buffers, char* schedalg, int argc, char *argv[])
 {
-    if (argc != 4) {
+    if (argc != 5) {
 	fprintf(stderr, "%s [portnum] [threads] [buffers] [schedalg]\n", argv[0]);
 	exit(1);
     }
     *port = atoi(argv[1]);
     *threads = atoi(argv[2]);
-    *buffers = atoi(argv[3]);
-    schedalg = argv[4];
+    *buffers = atoi(argv[3]);   
+    strcpy(schedalg, argv[4]);    
 }
 
+//consumer thread
 void *requestHandler(void)
 {
   while(1){
@@ -69,11 +82,10 @@ int main(int argc, char *argv[])
 {
     int listenfd, connfd, port, clientlen;
     int threads, buffers;
-    char schedalg[4];
     struct sockaddr_in clientaddr;
     
-
-    getargs(&port,&threads, &buffers,schedalg, argc, argv);
+    sched = (char*) malloc(5*sizeof(char));
+    getargs(&port,&threads, &buffers,sched, argc, argv);
     //initialize global variables 
     connFdBuf = (int*)malloc(buffers*sizeof(int));
     bufferSize = buffers;
@@ -81,7 +93,7 @@ int main(int argc, char *argv[])
     fillptr = 0;
     numInBuf = 0;
     consumers = threads;
-    
+
     //create threads
     pthread_t handlerC[consumers];
     int i;
@@ -90,9 +102,6 @@ int main(int argc, char *argv[])
     }
     
     printf("consumers join\n");
-
-
-
 
     listenfd = Open_listenfd(port);
     while (1) {
