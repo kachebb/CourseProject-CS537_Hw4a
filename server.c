@@ -91,9 +91,21 @@ int findSmallSize(){
   int index = 0;
   for(i=0; i < numInBuf; i++){
     //find smallest name
-    if(stat(fdInfoBuf[i].uri, &filestat) < 0){
+    printf("uri : %s\n",fdInfoBuf[i].uri);
+    char filename[MAXLINE];
+    int j = 0;
+    while(fdInfoBuf[i].uri[j] != '\0'){
+      filename[j] = fdInfoBuf[i].uri[j+1];
+      j++;
+    }
+    //if(open(filename, O_RDONLY) < 0)
+    // printf("error1\n");
+    //   if(open(fdInfoBuf[i].uri, O_RDONLY) < 0)
+    // printf("error\n");
+    if(stat(filename, &filestat) < 0){
       return -1;
     }
+    printf("%d\n",filestat.st_size);
     if(i==0){
       smallsize = filestat.st_size;
     }
@@ -168,7 +180,6 @@ rio_t* get(int index){
 
 fdInfo* get(int index){
   printf("get index%d\n", index);
-  // return fdInfoBuf[index];
   fdInfo* ret = (fdInfo *)malloc(sizeof(fdInfo));
   int i;
   ret->fd = fdInfoBuf[index].fd;
