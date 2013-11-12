@@ -1,0 +1,6 @@
+CS-537 Operating system Course Project
+Author: Kaichen Zhao
+Data: 2013/11/11
+
+This is a multithread http webserver and client.
+The webserver uses producer-consumer module.
